@@ -32,54 +32,29 @@ def is_cookie_expired(cookie_file):
         print(f"读取cookie文件失败: {e}")
         return True  
 
-def get_and_save_cookies(): # fuck you chrome
-    print("重新获取 YouTube Cookies...")
-    cookies = rookiepy.chrome(['youtube.com'])  
-    allowed_cookie_names = {
-        "__Secure-3PAPISID",
-        "__Secure-3PSID",
-        "LOGIN_INFO",
-        "GOOGLE_ABUSE_EXEMPTION",
-        "PREF",
-        "__Secure-1PSIDTS",
-        "__Secure-3PSIDTS",
-        "__Secure-3PSIDCC",
-        "VISITOR_PRIVACY_METADATA",
-        "VISITOR_INFO1_LIVE",
-        "YSC"
-    }
-
-    seen_cookie_names = set()  
-
+def get_and_save_cookies():
+    print("重新获取YouTube Cookies...")
+    cookies = rookiepy.chrome(['youtube.com'])
     with open(cookies_file, 'w', encoding='utf-8') as file:
-
         file.write("# Netscape HTTP Cookie File\n")
         file.write("# This file is generated automatically. Do not edit.\n\n")
-
         for cookie in cookies:
             domain = cookie['domain']
 
+            if "ssyoutube.com" in domain:
+                continue
             if not domain.startswith("."):
                 domain = "." + domain
-
-            if cookie['name'] not in allowed_cookie_names:
-                continue
-
-            if cookie['name'] in seen_cookie_names:
-                continue
-
-            seen_cookie_names.add(cookie['name'])
-
             secure = "TRUE" if cookie['secure'] else "FALSE"
-            http_only = "TRUE" if cookie.get('http_only', False) else "FALSE"
+            http_only = "TRUE" if cookie['http_only'] else "FALSE"
             expires = cookie['expires'] if cookie['expires'] else "0"
             path = cookie.get('path', '/')
             name = cookie['name']
+            if "GOOGLE_ABUSE_EXEMPTION" == name:
+                continue
             value = cookie['value']
-
-            file.write(f"{domain}   {http_only} {path}  {secure}    {expires}   {name}  {value}\n")
-
-    print("已重载 Cookies")
+            file.write(f"{domain}\t{secure}\t{path}\t{http_only}\t{expires}\t{name}\t{value}\n")
+    print("Cookies 已重载")
 
 
 def extract_video_id(video_url):
